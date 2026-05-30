@@ -4,13 +4,19 @@ import { BeforeInsert } from 'typeorm';
 @Entity()
 export class AdminLogin {
   @Column({ primary: true, generated: true })
-  id: number;
+  id!: number;
+
+  @Column({ nullable: true })
+  name: string = 'Admin';
 
   @Column({ unique: true })
-  username: string;
+  username!: string;
 
   @Column()
-  password: string;
+  password!: string;
+
+  @Column({ nullable: true })
+  role: string = 'manager';
 
   @BeforeInsert()
   async hashPassword() {

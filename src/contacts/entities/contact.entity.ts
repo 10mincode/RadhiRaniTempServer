@@ -9,31 +9,31 @@ export class Contact {
   }
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column()
-  email: string;
+  email!: string;
 
   @Column()
-  mobile: string;
+  mobile!: string;
 
   @Column('text')
-  message: string;
+  message!: string;
 
   @Column()
-  subject: string;
+  subject!: string;
 
   @Column({ nullable: true })
-  propertyId: string;
+  propertyId!: string;
 
   @Column()
-  status: string;
+  status!: string;
 
   @Column()
-  from: 'Home Page' | 'Property Page';
+  from!: 'Home Page' | 'Property Page';
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
+  createdAt!: Date;
 
   generateTimestampId(): string {
     const now = new Date();

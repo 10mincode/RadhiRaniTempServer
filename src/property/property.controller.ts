@@ -8,6 +8,9 @@ import {
   Delete,
   UploadedFiles,
   UseInterceptors,
+  UseGuards,
+  SetMetadata,
+  Res,
 } from '@nestjs/common';
 import { PropertyService } from './property.service';
 import { Property } from '../entities/property.entity';
@@ -15,13 +18,28 @@ import { Express } from 'express';
 import { FileFieldsInterceptor } from '@nestjs/platform-express/multer';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { AdminGuard } from 'src/gaurds/admin.gaurd';
 @Controller('properties')
 export class PropertyController {
-  constructor(private readonly propertyService: PropertyService) {}
+  constructor(private readonly propertyService: PropertyService) { }
+  @Get('export')
+  @UseGuards(AdminGuard)
+  @SetMetadata('role', 'manager')
+  async exportProperties(@Res() res: any) {
+    console.log('CONTROLLER HIT');
 
+    return this.propertyService.exportProperties(res);
+  }
   @Get()
   findAll(): Promise<Property[]> {
     return this.propertyService.findAll();
+  }
+
+  @Get('admin')
+  @SetMetadata('role', 'agent')
+  @UseGuards(AdminGuard)
+  findAllAdmin(): Promise<Property[]> {
+    return this.propertyService.findAllAdmin();
   }
 
   @Get(':id')
@@ -30,11 +48,13 @@ export class PropertyController {
   }
 
   @Post('upload')
+  @SetMetadata('role', 'super_admin')
+  @UseGuards(AdminGuard)
   @UseInterceptors(
     FileFieldsInterceptor(
       [
         { name: 'thumbnail', maxCount: 1 },
-        { name: 'images', maxCount: 20 },
+        { name: 'images', maxCount: 50 },
       ],
       {
         storage: diskStorage({
@@ -75,13 +95,30 @@ export class PropertyController {
   }
 
   @Put(':id')
+  @UseGuards(AdminGuard)
   update(@Param('id') id: string, @Body() property: Partial<Property>) {
     property.dateUpdated = new Date().toISOString();
     return this.propertyService.update(id, property);
   }
 
   @Delete(':id')
+  @UseGuards(AdminGuard)
+  @SetMetadata('role', 'super_admin')
   remove(@Param('id') id: string) {
     return this.propertyService.remove(id);
   }
+  @Put(':id/feature')
+  @UseGuards(AdminGuard)
+  @SetMetadata('role', 'manager')
+  async toggleFeatured(@Param('id') id: string, @Body('isFeatured') isFeatured: boolean) {
+    return this.propertyService.update(id, { isFeatured: isFeatured });
+  }
+  @Put(':id/visibility')
+  @UseGuards(AdminGuard)
+  @SetMetadata('role', 'manager')
+  async toggleVisibility(@Param('id') id: string, @Body('isVisible') isVisible: boolean) {
+    return this.propertyService.update(id, { isVisible: isVisible });
+  }
+
+
 }

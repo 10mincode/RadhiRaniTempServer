@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 export class ContactsService {
   constructor(
     @InjectRepository(Contact) private contactRepository: Repository<Contact>,
-  ) {}
+  ) { }
   async create(createContactDto: CreateContactDto): Promise<Contact> {
     const contact = this.contactRepository.create(createContactDto);
     return this.contactRepository.save(contact);
@@ -42,5 +42,19 @@ export class ContactsService {
   async remove(id: string) {
     await this.contactRepository.delete(id);
     return { deleted: true, id: id };
+  }
+
+  async exportContacts(res: any) {
+    try {
+      const contacts = await this.contactRepository.find();
+      const csv =
+        'Name,Email,Phone,Message,PropertyId,Subject,Status,From,CreatedAt\n' +
+        contacts.map((contact) => `${contact.name},${contact.email},${contact.mobile},${contact.message},${contact.propertyId},${contact.subject},${contact.status},${contact.from},${contact.createdAt}`).join('\n');
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="contacts.csv"');
+      res.send(csv);
+    } catch (error) {
+      throw new InternalServerErrorException('Error exporting contacts');
+    }
   }
 }

@@ -8,5 +8,6 @@ import { Property } from 'src/entities/property.entity';
   imports: [TypeOrmModule.forFeature([Property])],
   providers: [PropertyService],
   controllers: [PropertyController],
+  exports: [PropertyService],
 })
-export class PropertyModule {}
+export class PropertyModule { }

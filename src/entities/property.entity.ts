@@ -3,101 +3,72 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity()
 export class Property {
   @PrimaryGeneratedColumn()
-  id: number; // TypeORM will auto-generate
+  id!: number;
+
   @Column({ unique: true })
-  propertyId: string;
+  propertyId!: string;
 
   @Column('varchar', { length: 255 })
-  propertyName: string;
+  propertyName!: string;
 
-  @Column('simple-json', { nullable: true }) // location group stored as JSON
-  location: {
+  @Column('simple-json', { nullable: true })
+  location!: {
     address: string;
     city: string;
+    locality: string;
     state: string;
     postalCode: string;
-    latitude: number;
-    longitude: number;
     nearbyLandmarks: string[];
   };
 
   @Column({ nullable: true })
-  description: string;
+  description!: string;
 
   @Column({ nullable: true })
-  propertyType: string;
+  propertyType!: string;
 
   @Column({ nullable: true })
-  status: string;
+  status!: string;
 
   @Column({ nullable: true })
-  dateListed: string;
+  dateListed!: string;
 
   @Column({ nullable: true })
-  dateUpdated: string;
+  dateUpdated!: string;
 
   @Column('float', { nullable: true })
-  actualPrice: number;
+  startingPrice!: number;
 
   @Column({ nullable: true })
-  showcasePrice: string;
+  priceUnit!: string;
 
   @Column('float', { nullable: true })
-  pricePerSqFt: number;
-
-  @Column('float', { nullable: true })
-  minBookingAmount: number;
+  minBookingAmount!: number;
 
   @Column({ nullable: true })
-  furnishing: string;
+  propertyAge!: string;
 
   @Column({ nullable: true })
-  facing: string;
+  yearBuilt!: number;
 
-  @Column({ nullable: true })
-  propertyAge: string;
-
-  @Column('simple-json', { nullable: true }) // legalClearances as JSON
-  legalClearances: {
+  @Column('simple-json', { nullable: true })
+  legalClearances!: {
     reraId: string;
     approvedBy: string[];
   };
 
-  @Column('simple-json', { nullable: true }) // features + amenities as JSON
-  features: {
-    bedrooms: number;
-    bathrooms: number;
-    areaSqFt: number;
-    floor: string;
-    totalFloors: number;
-    yearBuilt: number;
-    amenities: {
-      parks: boolean;
-      garden: boolean;
-      swimmingPool: boolean;
-      gym: boolean;
-      security: boolean;
-      parking: boolean;
-      playArea: boolean;
-      clubHouse: boolean;
-      shoppingCenter: boolean;
-      publicTransport: boolean;
-      cCRoads: boolean;
-      powerBackup: boolean;
-      waterSupply: boolean;
-      wideSewage: boolean;
-      rainWaterHarvesting: boolean;
-      fireSafety: boolean;
-      smartHome: boolean;
-      petFriendly: boolean;
-      MovieHall: boolean;
-      accessibility: string[];
-    };
-  };
+  @Column('simple-json', { nullable: true })
+  amenities!: string[];
 
-  @Column('simple-json', { nullable: true }) // media group as JSON
-  media: {
+  @Column('simple-json', { nullable: true })
+  media!: {
     thumbnail: string;
     images: string[];
   };
+  @Column('simple-json', { nullable: true })
+  videoUrls!: string[];
+  @Column({ default: false })
+  isFeatured!: boolean;
+  @Column({ default: true })
+  isVisible!: boolean;
 }
