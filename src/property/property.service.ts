@@ -52,7 +52,7 @@ export class PropertyService {
           if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
         });
       }
-
+      await this.propertyRepo.delete({ propertyId: id });
       return { deleted: true };
 
     } catch (error) {

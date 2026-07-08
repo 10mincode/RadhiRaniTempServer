@@ -19,6 +19,8 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express/multer';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { AdminGuard } from 'src/gaurds/admin.gaurd';
+import * as fs from 'fs';
+import * as path from 'path';
 @Controller('properties')
 export class PropertyController {
   constructor(private readonly propertyService: PropertyService) { }
@@ -30,17 +32,18 @@ export class PropertyController {
 
     return this.propertyService.exportProperties(res);
   }
-  @Get()
-  findAll(): Promise<Property[]> {
-    return this.propertyService.findAll();
-  }
-
   @Get('admin')
   @SetMetadata('role', 'agent')
   @UseGuards(AdminGuard)
   findAllAdmin(): Promise<Property[]> {
     return this.propertyService.findAllAdmin();
   }
+  @Get()
+  findAll(): Promise<Property[]> {
+    return this.propertyService.findAll();
+  }
+
+
 
   @Get(':id')
   findOne(@Param('id') id: string): Promise<Property | null> {
@@ -94,9 +97,58 @@ export class PropertyController {
     return this.propertyService.create(property);
   }
 
-  @Put(':id')
+  @Put('update/:id')
   @UseGuards(AdminGuard)
-  update(@Param('id') id: string, @Body() property: Partial<Property>) {
+  @SetMetadata('role', 'manager')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'thumbnail', maxCount: 1 },
+        { name: 'images', maxCount: 50 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './uploads',
+          filename: (_, file, cb) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+            cb(null, uniqueSuffix + extname(file.originalname));
+          },
+        }),
+      },
+    ),
+  )
+  async updateProperty(
+    @Param('id') id: string,
+    @UploadedFiles() files: { thumbnail?: Express.Multer.File[]; images?: Express.Multer.File[] },
+    @Body() body: any,
+  ) {
+    const property = JSON.parse(body.property);
+    const keepImages: string[] = JSON.parse(body.keepImages || '[]');
+    const removedImages: string[] = JSON.parse(body.removedImages || '[]');
+
+    // Delete removed images from disk
+    removedImages.forEach(img => {
+      const imgPath = path.join(process.cwd(), 'uploads', img);
+      if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
+    });
+
+    // Handle thumbnail
+    if (files.thumbnail) {
+      // New thumbnail — delete old one
+      const existing = await this.propertyService.findOne(id);
+      if (existing?.media?.thumbnail) {
+        const oldPath = path.join(process.cwd(), 'uploads', existing.media.thumbnail);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      property.media.thumbnail = files.thumbnail[0].filename;
+    } else {
+      property.media.thumbnail = body.existingThumbnail;
+    }
+
+    // Combine kept + new images
+    const newImages = files.images ? files.images.map(f => f.filename) : [];
+    property.media.images = [...keepImages, ...newImages];
+
     property.dateUpdated = new Date().toISOString();
     return this.propertyService.update(id, property);
   }
